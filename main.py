@@ -13,9 +13,9 @@ DATA_PATH = "E:/Documents and stuff/School_Stuff/_CSNS/PNI/COMSOL6.0(64bit)/Simu
 # DATA_FILE = "Horseshoe.txt"
 DATA_FILE = "bar_magnet.txt"
 
-AXIS = "z"
+AXIS = "x"
 
-PLOT_FIELD_FIRST = True # If true, generates a plot of the field before raytracing
+PLOT_FIELD_FIRST = False # If true, generates a plot of the field before raytracing
 SOURCE_PROFILE = "gaussian" # Defines a source profile (use an imported function here)
 
 # Execution code
@@ -30,8 +30,8 @@ if __name__ == "__main__":
         field_loc = data["field_loc"]
 
     # Trim the data
-    field = field[1:-1, 1:-1, 1:-1, :]
-    field_loc = field_loc[:, 1:-1, 1:-1, 1:-1]
+    # field = field[1:-1, 1:-1, 1:-1, :]
+    # field_loc = field_loc[:, 1:-1, 1:-1, 1:-1]
 
     # Rotate the field
     axis_rot = {"x": [0, 1, 2], "y": [1, 0, 2], "z": [2, 0, 1]}
@@ -44,6 +44,7 @@ if __name__ == "__main__":
 
     space_dim = np.shape(field)
     space_dim = np.array(space_dim[:-1])-2
+    print(space_dim)
 
     # Plot the input data
     if PLOT_FIELD_FIRST:
@@ -53,8 +54,8 @@ if __name__ == "__main__":
         ax.quiver(x, y, z,
                   field_temp[0], field_temp[1], field_temp[2],
                   length = 1, normalize = True)
-        plt.xlim(0, space_dim[0])
-        plt.ylim(0, space_dim[1])
+        # plt.xlim(0, space_dim[0])
+        # plt.ylim(0, space_dim[1])
         ax.set_zlim(0, space_dim[2])
         plt.show()
 
@@ -76,7 +77,7 @@ if __name__ == "__main__":
 
     PIX_COUNT = 0
     PIX_TIME = 0
-    tot_pix = np.prod(space_dim[:-1])
+    tot_pix = np.prod(np.shape(output))
     with mp.Pool(processes = os.cpu_count()) as pool:
         for i, row in enumerate(output):
             for j, col in enumerate(row):
@@ -106,7 +107,7 @@ if __name__ == "__main__":
     fig, ax = plt.subplots(layout = 'constrained')
     contorf = plt.contourf(output)
     contor = ax.contour(contorf, levels = contorf.levels[::2], colors='r')
-    
+
     cbar = fig.colorbar(contorf)
     cbar.ax.set_ylabel('Neutron Brightness')
     cbar.add_lines(contor)
