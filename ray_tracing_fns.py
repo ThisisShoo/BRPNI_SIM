@@ -38,8 +38,8 @@ def make_ray(b_field, start_pos, dir_vec):
         y_pos = int(round(float(y_ray * x_pos + start_pos[0])))
         z_pos = int(round(float(z_ray * x_pos + start_pos[1])))
 
-        y_out_of_bound = (y_ray * len(b_field) + start_pos[0]) >= len(b_field[0])
-        z_out_of_bound = (z_ray * len(b_field) + start_pos[1]) >= len(b_field[0][0])
+        y_out_of_bound = (y_ray * len(b_field) + start_pos[0]) >= len(b_field[0])-1
+        z_out_of_bound = (z_ray * len(b_field) + start_pos[1]) >= len(b_field[0][0])-1
 
         if y_pos < 0 or y_out_of_bound or z_pos < 0 or z_out_of_bound:
             return None
