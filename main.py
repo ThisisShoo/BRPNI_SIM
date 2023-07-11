@@ -8,23 +8,24 @@ import config_fns
 import ray_tracing_fns
 import os
 
-# Configuration
+# Configurationf
 DATA_PATH = "E:/Documents and stuff/School_Stuff/_CSNS/PNI/COMSOL6.0(64bit)/Simulations/"
 # DATA_FILE = "Horseshoe.txt"
 DATA_FILE = "bar_magnet.txt"
+# DATA_FILE = "empty.txt"
 
 AXIS = "y" # Axis to be raytraced along, must be "x", "y", or "z"
 
 PLOT_FIELD_FIRST = False # If true, generates a plot of the field before raytracing
-SHOW_PROGRESS = False # If true, prints the progress
+SHOW_PROGRESS = True # If true, prints the progress
 SOURCE_PROFILE = "gaussian" # Defines a source profile (use an imported function here)
 
 # Execution code
 if __name__ == "__main__":
     # Identify input data type
     if DATA_FILE.rsplit('.', maxsplit=1)[-1] == 'txt':
-        field, _ = config_fns.read_data(DATA_PATH, DATA_FILE, facing_dir = "x")
-        field_loc = np.indices(np.shape(field)[:-1])
+        field, _ = config_fns.read_data(DATA_PATH, DATA_FILE)
+        field_loc = np.indices(np.shape(field)[:-1]) 
     elif DATA_FILE.rsplit('.', maxsplit=1)[-1] == 'npz':
         data = np.load(DATA_PATH + "/" + DATA_FILE)
         field = data["field"]
@@ -38,10 +39,8 @@ if __name__ == "__main__":
     field_loc = np.transpose(field_loc, axis_rot[AXIS])
     field = np.transpose(field, axis_rot[AXIS])
 
-    print(np.shape(field_loc), np.shape(field))
-
-    space_dim = np.shape(field)[1:]
-    print(f"The size of the space is {space_dim[2]}")
+    space_dim = np.shape(field)[:-1]
+    print(f"The size of the space is {space_dim}")
     space_dim = np.array(space_dim)
 
     field_loc_T = np.transpose(field_loc, (3, 0, 1, 2))
@@ -70,10 +69,9 @@ if __name__ == "__main__":
 
     # Do raytracing
     start_time = datetime.now()
-    print("Starting raytracing at " + str(start_time))
+    print(f"Starting raytracing at {str(start_time)}, along axis {AXIS}.")
 
     output = np.zeros(space_dim[0:2])
-    print(np.shape(output))
 
     PIX_COUNT = 0
     PIX_TIME = 0
@@ -106,16 +104,18 @@ if __name__ == "__main__":
     PLOT_AXIS = "xyz".replace(AXIS, '')
 
     # Make the plot
-    fig, ax = plt.subplots(layout = 'constrained')
+    size = (space_dim[1] + 1.5, space_dim[0])/max(space_dim[0:2]) * 7
+    fig, ax = plt.subplots(layout = 'constrained', figsize = size)
     contorf = plt.contourf(output)
     contor = ax.contour(contorf, levels = contorf.levels[::2], colors='r')
 
-    cbar = fig.colorbar(contorf)
+    cbar_ticks = np.linspace(np.min(output), np.max(output), 20)
+    cbar = fig.colorbar(contorf, ticks=cbar_ticks)
     cbar.ax.set_ylabel('Neutron Brightness')
     cbar.add_lines(contor)
 
-    plt.xlabel(f"{PLOT_AXIS[0]} [pix]")
-    plt.ylabel(f"{PLOT_AXIS[1]} [pix]")
+    plt.ylabel(f"{PLOT_AXIS[0]} [pix]")
+    plt.xlabel(f"{PLOT_AXIS[1]} [pix]")
     plt.title(f"Output of raytracing simulation, {AXIS} axis")
     plt.savefig(f"plots/result {AXIS}.png")
 

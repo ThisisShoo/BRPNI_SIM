@@ -18,6 +18,12 @@ def gaussian_2d(space_dim, sigma, mu_):
     sigma_y, sigma_z = sigma
     mu_y, mu_z = mu_
 
+    mu_y = int(mu_y * space_dim[1])
+    mu_z = int(mu_z * space_dim[2])
+
+    sigma_y = int(sigma_y * space_dim[1])
+    sigma_z = int(sigma_z * space_dim[2])
+
     output = np.zeros((space_dim[1], space_dim[2]))
 
     for y_pos, _ in enumerate(output):
@@ -34,7 +40,7 @@ def dist(p_1, p_2):
     """Calculates the distance between two points."""
     return ((p_1[0]-p_2[0])**2 + (p_1[1]-p_2[1])**2)**0.5
 
-def read_data(data_path, filename, facing_dir = "x"):
+def read_data(data_path, filename):
     """Reads data from COMSOL output file.
     
     Args:
@@ -46,10 +52,6 @@ def read_data(data_path, filename, facing_dir = "x"):
         field (np.ndarray): Magnetic field data.
         field_loc (np.ndarray): Location of the magnetic field data.
     """
-    axis = {"x": [0, 1, 2], "y": [1, 0, 2], "z": [2, 0, 1]}
-    axis_loc = np.array(axis[facing_dir])
-    axis_field = axis_loc + 3
-
     with open(data_path + filename, 'r', encoding="utf-8") as f:
         data = []
         for _, line in enumerate(f):
@@ -73,11 +75,9 @@ def read_data(data_path, filename, facing_dir = "x"):
 
     data = np.transpose(data)
 
-    temp1, temp2, temp3 = axis_field
-    field_input = np.array([data[temp3], data[temp2], data[temp1]])
+    field_input = np.array([data[5], data[4], data[3]])
 
-    temp1, temp2, temp3 = axis_loc
-    field_loc = np.array([data[temp3], data[temp2], data[temp1]])
+    field_loc = np.array([data[2], data[1], data[0]])
 
     for i, row in enumerate(field_loc):
         temp_row = row - min(row)

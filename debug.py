@@ -1,5 +1,5 @@
 import numpy as np
 
-test = [1, 2, 3, 4, 5]
+test = (6, 8, 10)
 
-print(np.array(test)[5])
+print((1, 2) + (3, 4))
