@@ -2,7 +2,7 @@
     Editing this file is not advised.
 """
 import numpy as np
-import config
+import main
 
 def gaussian_2d(space_dim, sigma, mu_):
     """Returns a 2D Gaussian distribution in a 2D array.
@@ -109,6 +109,7 @@ def find_polarization(path_field, wavelength):
     Args:
         path_field (np.array): The magnetic field values of each voxel the ray passes through.
         wavelength (float): The wavelength of the neutron.
+        P_0 (float): The initial polarization rate of the neutron. Defaults to 1.
 
     Returns:
         float: The polarization rate of the neutron.
@@ -118,7 +119,9 @@ def find_polarization(path_field, wavelength):
     m = 1.675e-27
     field_integral = np.sum(path_field, axis=0) # In Tesla
     temp = GAMMA * m / h * field_integral
-    P = 1 - temp**2 * wavelength**2
+    dP = temp**2 * wavelength**2
+
+    P = (1 - dP) * main.INITIAL_POLARIZATION
 
     return P
 
