@@ -1,8 +1,1 @@
-Check that the equations are correct, and are applied correctly. 
-
-The multiprocessing implementation is working fine, there's not much to improve.
-
-I have solved the problem where three different perspectives are showing the same thing. It was caused by a faulty implementation of matrix rotation. Each dimension is an axis, so swapping elements of the matrix along the same axis will only lead to trouble. 
-
-I don't know what was wrong with the plot at first. It might have to do with COMSOL, investigate this *only* if have time. 
-
+Next, introduce the random noise by replacing the "P" in (1-P)/2 with (1 - dP)P_0

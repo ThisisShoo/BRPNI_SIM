@@ -1,5 +1,6 @@
+"""Testing ground for new features, or to run a specific function and see what's wrong with it"""
 import numpy as np
 
-test = (6, 8, 10)
+test = (6, 8, 10, 3)
 
-print((1, 2) + (3, 4))
+print(test[0:3])
