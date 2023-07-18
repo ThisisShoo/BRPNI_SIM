@@ -11,8 +11,8 @@ import os
 # # Put the input file path and file names here
 DATA_PATH = "E:/Documents and stuff/School_Stuff/_CSNS/PNI/COMSOL6.0(64bit)/Simulations/"
 # DATA_FILE = "Horseshoe.txt"
-# DATA_FILE = "bar_magnet.txt"
-DATA_FILE = "empty.txt"
+DATA_FILE = "bar_magnet.txt"
+# DATA_FILE = "empty.txt"
 
 # # Defines a source profile
 # # To use a uniform source profile, set SOURCE_PROFILE to None
@@ -21,14 +21,17 @@ DATA_FILE = "empty.txt"
 SOURCE_PROFILE = "gaussian"
 
 # # Specify in which axis is the neutron beam projected
-AXIS = "z" # Axis to be raytraced along, must be "x", "y", or "z"
+AXIS = "x" # Axis to be raytraced along, must be "x", "y", or "z"
+
+# # Physisc settings
+INITIAL_POLARIZATION = 0.85 # Initial polarization rate of the neutron
+WAVELENGTH = 7
 
 # # Misc settings
-PLOT_NAME = 'background'
+PLOT_NAME = 'sim'
 PLOT_FIELD_FIRST = False # If true, generates a plot of the field before raytracing
 SHOW_PROGRESS = True # If true, prints the progress
 
-INITIAL_POLARIZATION = 1
 
 # Execution code
 if __name__ == "__main__":
@@ -49,7 +52,7 @@ if __name__ == "__main__":
     field_loc = np.transpose(field_loc, axis_rot[AXIS])
     field = np.transpose(field, axis_rot[AXIS])
 
-    space_dim = np.shape(field)[0:3] # NOTE: this works
+    space_dim = np.shape(field)[0:3]
     print(f"The size of the space is {space_dim}")
     space_dim = np.array(space_dim) + [space_dim[0]//10, space_dim[1]//10, space_dim[2]//10]
 
@@ -108,7 +111,7 @@ if __name__ == "__main__":
     print(f"{completion} - Processing complete."
           f"Total time taken: {completion - start_time}")
 
-    PLOT_AXIS = "zxy".replace(AXIS, '')
+    PLOT_AXIS = "zyx".replace(AXIS, '')
 
     # Make the plot
     size = (space_dim[2] + 1.5, space_dim[1])/max(space_dim[1:3]) * 7
@@ -127,6 +130,8 @@ if __name__ == "__main__":
 
     if PLOT_NAME == '' or PLOT_NAME is None:
         PLOT_NAME = 'result'
+    else:
+        PLOT_NAME = f'{PLOT_NAME} {WAVELENGTH}A {int(INITIAL_POLARIZATION*100)}P'
 
     plt.savefig(f"plots/{PLOT_NAME} {AXIS}.png")
     print(f"{datetime.now()} - Plot saved as {PLOT_NAME} {AXIS}.png")

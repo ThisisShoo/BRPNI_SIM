@@ -1,1 +1,0 @@
-Next, introduce the random noise by replacing the "P" in (1-P)/2 with (1 - dP)P_0

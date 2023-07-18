@@ -114,14 +114,19 @@ def find_polarization(path_field, wavelength):
     Returns:
         float: The polarization rate of the neutron.
     """
-    GAMMA = 1.83247179 * 10**8
-    h = 6.626e-34
-    m = 1.675e-27
-    field_integral = np.sum(path_field, axis=0) # In Tesla
+    GAMMA = 1.83247171 * 10**8 # s^-1 T^-1
+    h = 6.626 * 10**-34 # J*s
+    m = 1.674 * 10**-27 # kg
+    field_integral = np.sum(path_field, axis=0) # In the same unit as COMSOL's export
     temp = GAMMA * m / h * field_integral
+    wavelength = wavelength * 10**-10 # m
     dP = temp**2 * wavelength**2
 
+    dP = (dP[0]**2 + dP[1]**2 + dP[2]**2)**0.5 * 0.001
+    # print(dP)
     P = (1 - dP) * main.INITIAL_POLARIZATION
+
+    # print(P)
 
     return P
 
