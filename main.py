@@ -11,8 +11,8 @@ import os
 # # Put the input file path and file names here
 DATA_PATH = "E:/Documents and stuff/School_Stuff/_CSNS/PNI/COMSOL6.0(64bit)/Simulations/"
 # DATA_FILE = "Horseshoe.txt"
-DATA_FILE = "bar_magnet.txt"
-# DATA_FILE = "empty.txt"
+# DATA_FILE = "bar_magnet.txt"
+DATA_FILE = "empty.txt"
 
 # # Defines a source profile
 # # To use a uniform source profile, set SOURCE_PROFILE to None
@@ -21,11 +21,11 @@ DATA_FILE = "bar_magnet.txt"
 SOURCE_PROFILE = "gaussian"
 
 # # Specify in which axis is the neutron beam projected
-AXIS = "x" # Axis to be raytraced along, must be "x", "y", or "z"
+AXIS = "y" # Axis to be raytraced along, must be "x", "y", or "z"
 
 # # Physisc settings
-INITIAL_POLARIZATION = 0.85 # Initial polarization rate of the neutron
-WAVELENGTH = 7
+INITIAL_POLARIZATION = 0.99 # Initial polarization rate of the neutron
+WAVELENGTH = 2
 
 # # Misc settings
 PLOT_NAME = 'sim'
@@ -135,3 +135,4 @@ if __name__ == "__main__":
 
     plt.savefig(f"plots/{PLOT_NAME} {AXIS}.png")
     print(f"{datetime.now()} - Plot saved as {PLOT_NAME} {AXIS}.png")
+    plt.show()

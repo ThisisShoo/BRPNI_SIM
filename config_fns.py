@@ -103,31 +103,37 @@ def read_data(data_path, filename):
 
     return field, field_loc
 
-def find_polarization(path_field, wavelength):
+def find_polarization(path_field, path, wavelength):
     """Calculates a neutron's polarization rate after passing through a magnetic field along its path.
     
     Args:
         path_field (np.array): The magnetic field values of each voxel the ray passes through.
         wavelength (float): The wavelength of the neutron.
+        path (np.array): The neutron's trajectory.
         P_0 (float): The initial polarization rate of the neutron. Defaults to 1.
 
     Returns:
         float: The polarization rate of the neutron.
     """
-    GAMMA = 1.83247171 * 10**8 # s^-1 T^-1
+    GAMMA = -1.83247171 * 10**8 # s^-1 T^-1
     h = 6.626 * 10**-34 # J*s
     m = 1.674 * 10**-27 # kg
     field_integral = np.sum(path_field, axis=0) # In the same unit as COMSOL's export
-    temp = GAMMA * m / h * field_integral
-    wavelength = wavelength * 10**-10 # m
-    dP = temp**2 * wavelength**2
 
-    dP = (dP[0]**2 + dP[1]**2 + dP[2]**2)**0.5 * 0.001
+    # Find the directional vector of the neutron's trajectory
+    d_vec = path[-1] - path[0]
+    d_vec = d_vec / np.linalg.norm(d_vec)
+
+    phi = 0
+    for count, field_vec in enumerate(field_integral):
+        phi += np.dot(field_vec, d_vec[count])
+
+    temp = (GAMMA * m) / h * phi
+    wavelength = wavelength * 10**-10 # m
+
+    dP = (temp*wavelength)**2
     # print(dP)
+
     P = (1 - dP) * main.INITIAL_POLARIZATION
 
-    # print(P)
-
     return P
-
-

@@ -108,10 +108,10 @@ def ray_tracing_sim(field, pixel_pos, source):
             path_field, field_path = ray
 
         # Get each ray's polarization
-        p_ray = config_fns.find_polarization(path_field, main.WAVELENGTH)
+        p_ray = config_fns.find_polarization(path_field, field_path, main.WAVELENGTH)
         # NOTE: for now, the polarizatin is a scalar. In the future, it could be a vector.
 
-        i_ray = source_val * 0.5 * (p_ray - 1)
+        i_ray = source_val * 0.5 * (1 - p_ray)
 
         i_pix += i_ray
 
