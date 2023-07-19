@@ -11,8 +11,8 @@ import os
 # # Put the input file path and file names here
 DATA_PATH = "E:/Documents and stuff/School_Stuff/_CSNS/PNI/COMSOL6.0(64bit)/Simulations/"
 # DATA_FILE = "Horseshoe.txt"
-# DATA_FILE = "bar_magnet.txt"
-DATA_FILE = "empty.txt"
+DATA_FILE = "bar_magnet.txt"
+# DATA_FILE = "empty.txt"
 
 # # Defines a source profile
 # # To use a uniform source profile, set SOURCE_PROFILE to None
@@ -21,11 +21,11 @@ DATA_FILE = "empty.txt"
 SOURCE_PROFILE = "gaussian"
 
 # # Specify in which axis is the neutron beam projected
-AXIS = "y" # Axis to be raytraced along, must be "x", "y", or "z"
+AXIS = "z" # Axis to be raytraced along, must be "x", "y", or "z"
 
 # # Physisc settings
-INITIAL_POLARIZATION = 0.99 # Initial polarization rate of the neutron
-WAVELENGTH = 2
+INITIAL_POLARIZATION = 0.85 # Initial polarization rate of the neutron in decimals
+WAVELENGTH = 7
 
 # # Misc settings
 PLOT_NAME = 'sim'
@@ -126,13 +126,12 @@ if __name__ == "__main__":
 
     plt.ylabel(f"{PLOT_AXIS[1]} [pix]")
     plt.xlabel(f"{PLOT_AXIS[0]} [pix]")
-    plt.title(f"Output of raytracing simulation, along {AXIS} axis")
+    plt.title(f"Raytracing output, subject:{PLOT_NAME}, \u03BB:{WAVELENGTH}\u212B, P0:{INITIAL_POLARIZATION*100}%, axis:{AXIS}")
 
     if PLOT_NAME == '' or PLOT_NAME is None:
-        PLOT_NAME = 'result'
+        PLOT_NAME = 'Result'
     else:
         PLOT_NAME = f'{PLOT_NAME} {WAVELENGTH}A {int(INITIAL_POLARIZATION*100)}P'
 
     plt.savefig(f"plots/{PLOT_NAME} {AXIS}.png")
     print(f"{datetime.now()} - Plot saved as {PLOT_NAME} {AXIS}.png")
-    plt.show()
