@@ -6,7 +6,7 @@ import config
 import config_fns
 import main
 
-def make_ray(b_field, start_pos, dir_vec):
+def make_ray(b_field, start_pos, dir_vec): # BUG: somethow the rays are not being made
     """Simulates a ray of neutron passing through the field space.
     Returns the magnetic field values of each voxel the ray passes through.
     Precondition: 
@@ -21,37 +21,58 @@ def make_ray(b_field, start_pos, dir_vec):
     Returns:
         np.array: The magnetic field values of each voxel the ray passes through.
     """
-    theta, phi = dir_vec
+    theta, phi = dir_vec # Radians
 
-    theta = np.radians(theta)
-    phi = np.radians(phi)
+    y_increment = np.sin(theta)
+    z_increment = np.sin(phi)
+    x_tot = len(b_field)
 
-    deviate_angle = np.arctan(np.tan(theta) * np.cos(phi))
-    if deviate_angle > config.MAX_ANGLE:
-        raise ValueError("Max angle exceeded.")
+    # Determine if the ray deviates too much
+    deviant_angle = np.arctan((y_increment**2 + z_increment**2)**0.5)
 
-    y_ray = np.sin(theta) * np.sin(phi)
-    z_ray = np.sin(theta) * np.cos(phi)
+    if deviant_angle > np.radians(config.MAX_ANGLE):
+        err_msg = f"Deviant angle {np.degrees(deviant_angle)} "
+        err_msg += f"is greater than the maximum deviant angle {config.MAX_ANGLE}."
+        raise ValueError(err_msg)
+
+    # Determine the final position of the ray
+    y_ray_end = y_increment * x_tot + start_pos[0]
+    z_ray_end = z_increment * x_tot + start_pos[1]
+
+    y_out_of_bound = y_ray_end >= len(b_field[0])-1 or y_ray_end < 0
+    z_out_of_bound = z_ray_end >= len(b_field[0][0])-1 or z_ray_end < 0
+
+    # If out of bound, print message and return None (move on to next ray)
+    if y_out_of_bound or z_out_of_bound:
+        return None
 
     path_field = []
     field_path = []
     for x_pos, _ in enumerate(b_field):
-        y_pos = int(round(float(y_ray * x_pos + start_pos[0])))
-        z_pos = int(round(float(z_ray * x_pos + start_pos[1])))
+        # For each x position, determine the y-z position of the ray #NOTE: this step is fine
+        y_ray_pos = np.float64(y_increment * x_pos + start_pos[0])
+        z_ray_pos = np.float64(z_increment * x_pos + start_pos[1])
 
-        y_out_of_bound = (y_ray * len(b_field) + start_pos[0]) >= len(b_field[0])-1
-        z_out_of_bound = (z_ray * len(b_field) + start_pos[1]) >= len(b_field[0][0])-1
+        # Determine if the ray is out of bound
+        y_ray_finish = len(b_field) * y_increment + start_pos[0]
+        z_ray_finish = len(b_field) * z_increment + start_pos[1]
 
-        if y_pos < 0 or y_out_of_bound or z_pos < 0 or z_out_of_bound:
+        y_out_of_bound = y_ray_finish >= len(b_field[0])-1 or y_ray_finish < 0
+        z_out_of_bound = z_ray_finish >= len(b_field[0][0])-2 or z_ray_finish < 0
+
+        if y_out_of_bound or z_out_of_bound:
             return None
         else:
+            y_pos = int(round(y_ray_pos))
+            z_pos = int(round(z_ray_pos))
+            # print(f"z_pos = {z_pos}, z_ray_finish = {z_ray_finish}")
             field_at_loc = b_field[x_pos][y_pos][z_pos]
-            ray_loc = [x_pos, y_pos, z_pos]
+            ray_loc = [x_pos, y_ray_pos, z_ray_pos]
 
             path_field.append(field_at_loc)
             field_path.append(ray_loc)
 
-        if y_pos < 0 or y_pos >= len(b_field[0]) or z_pos < 0 or z_pos >= len(b_field[0][0]):
+        if y_ray_pos < 0 or y_ray_pos >= len(b_field[0]) or z_ray_pos < 0 or z_ray_pos >= len(b_field[0][0]):
             raise IndexError("Ray has left the space without reaching the end,"
                              "please check the starting position and direction. "
                              f"Ray last seen at (x, y, z) = {(x_pos, y_pos, z_pos)}. "
@@ -70,6 +91,14 @@ def ray_tracing_sim(field, pixel_pos, source):
         the field values along the ray as well as the ray's path. Calcualte the polarization rate of
         the ray, and the resulting intensity, and sum the intensities together to get the intensity 
         of the pixel.
+
+    Args:
+        field (np.array): The magnetic field in the space.
+        pixel_pos (tuple): The position of the pixel in 2d space.
+        source (np.array): The source of the neutrons.
+
+    Returns:
+        float: The intensity of the pixel.
     """
     # Create a background for the spotlight to cast on
     space_dim = np.shape(field)[:3]
@@ -84,12 +113,13 @@ def ray_tracing_sim(field, pixel_pos, source):
     spotlight = np.where(np.sqrt((source_indx[0] - pixel_pos[0])**2 + (source_indx[1] - pixel_pos[1])**2) <= deviant_radius)
 
     # Iterate through each pixel in the spotlight
-    i_pix = 0
+    i_pix = np.float64(0)
 
     task_num = np.shape(spotlight)[1]
     ray_time = 0
     for i in range(task_num):
-        ray_start = datetime.now()
+        # ray_start = datetime.now()
+        # ray_time += (datetime.now() - ray_start).total_seconds()
         # print(f"Making ray {i} out of {task_num}. Time elapsed: {ray_time}.")
         source_y, source_z = spotlight[0][i], spotlight[1][i]
         source_val = source[source_y][source_z]

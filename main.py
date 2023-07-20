@@ -21,14 +21,14 @@ DATA_FILE = "bar_magnet.txt"
 SOURCE_PROFILE = "gaussian"
 
 # # Specify in which axis is the neutron beam projected
-AXIS = "z" # Axis to be raytraced along, must be "x", "y", or "z"
+AXIS = "x" # Axis to be raytraced along, must be "x", "y", or "z"
 
 # # Physisc settings
-INITIAL_POLARIZATION = 0.85 # Initial polarization rate of the neutron in decimals
-WAVELENGTH = 7
+INITIAL_POLARIZATION = 0.99 # Initial polarization rate of the neutron in decimals
+WAVELENGTH = 2
 
 # # Misc settings
-PLOT_NAME = 'sim'
+PLOT_NAME = 'Sim'
 PLOT_FIELD_FIRST = False # If true, generates a plot of the field before raytracing
 SHOW_PROGRESS = True # If true, prints the progress
 
@@ -52,9 +52,9 @@ if __name__ == "__main__":
     field_loc = np.transpose(field_loc, axis_rot[AXIS])
     field = np.transpose(field, axis_rot[AXIS])
 
-    space_dim = np.shape(field)[0:3]
+    space_dim = np.array(np.shape(field)[0:3])
     print(f"The size of the space is {space_dim}")
-    space_dim = np.array(space_dim) + [space_dim[0]//10, space_dim[1]//10, space_dim[2]//10]
+    space_dim = np.array(space_dim)# + [space_dim[0]//10, space_dim[1]//10, space_dim[2]//10] - 1
 
     field_loc_T = np.transpose(field_loc, (3, 0, 1, 2))
     field_T = np.transpose(field, (3, 0, 1, 2))
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         source = config_fns.gaussian_2d(space_dim,
                                         config.SOURCE_STD,
                                         config.SOURCE_NORM)
-    else: 
+    else:
         pass
 
     # Do raytracing
@@ -86,16 +86,11 @@ if __name__ == "__main__":
 
     ROW_TIME = 0
     tot_row = np.shape(output)[0]
-    # NOTE: I might be iterating through the dimensions in the wrong order
+    print(np.shape(output))
     with mp.Pool(processes = os.cpu_count()) as pool:
         for i, row in enumerate(output):
             row_start = datetime.now()
             progress = round(i/tot_row * 100, 2)
-            if SHOW_PROGRESS:
-                print(f"Now processing row {i}/{tot_row}, progress {progress}"
-                      f"%. Last row used {ROW_TIME}. "
-                      f"Total time elapsed: {datetime.now() - start_time}. "
-                      f"Estimated time remaining: {tot_row * ROW_TIME}. ")
             for j, col in enumerate(row):
                 i_pix = pool.apply_async(ray_tracing_fns.ray_tracing_sim,
                                          args=(field, (i, j), source))
@@ -104,6 +99,11 @@ if __name__ == "__main__":
                 output[i][j] = i_pix
 
             ROW_TIME = datetime.now() - row_start
+            if SHOW_PROGRESS:
+                print(f"Processed row {i}/{tot_row}, progress {progress}"
+                      f"%. Last row used {ROW_TIME}. "
+                      f"Total time elapsed: {datetime.now() - start_time}. "
+                      f"Estimated time remaining: {tot_row * ROW_TIME}. ")
 
     # Normalize the output
 

@@ -123,6 +123,7 @@ def find_polarization(path_field, path, wavelength):
     # Find the directional vector of the neutron's trajectory
     d_vec = path[-1] - path[0]
     d_vec = d_vec / np.linalg.norm(d_vec)
+    # print(d_vec)
 
     phi = 0
     for count, field_vec in enumerate(field_integral):
@@ -132,8 +133,8 @@ def find_polarization(path_field, path, wavelength):
     wavelength = wavelength * 10**-10 # m
 
     dP = (temp*wavelength)**2
-    # print(dP)
 
     P = (1 - dP) * main.INITIAL_POLARIZATION
+    # print(P)
 
     return P
