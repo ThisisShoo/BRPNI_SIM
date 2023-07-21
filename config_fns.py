@@ -104,7 +104,8 @@ def read_data(data_path, filename):
     return field, field_loc
 
 def find_polarization(path_field, path, wavelength):
-    """Calculates a neutron's polarization rate after passing through a magnetic field along its path.
+    """Calculates a neutron's polarization rate after passing through a magnetic field along 
+        its path.
     
     Args:
         path_field (np.array): The magnetic field values of each voxel the ray passes through.
@@ -118,7 +119,8 @@ def find_polarization(path_field, path, wavelength):
     GAMMA = -1.83247171 * 10**8 # s^-1 T^-1
     h = 6.626 * 10**-34 # J*s
     m = 1.674 * 10**-27 # kg
-    field_integral = np.sum(path_field, axis=0) # In the same unit as COMSOL's export
+    # field_integral = np.sum(path_field, axis=0) # In the same unit as COMSOL's export
+    # print(field_integral)
 
     # Find the directional vector of the neutron's trajectory
     d_vec = path[-1] - path[0]
@@ -126,8 +128,15 @@ def find_polarization(path_field, path, wavelength):
     # print(d_vec)
 
     phi = 0
-    for count, field_vec in enumerate(field_integral):
-        phi += np.dot(field_vec, d_vec[count])
+    for count, field_vec in enumerate(path_field):
+        # Simulate the propagation of neutron through the field, and actively calculate the precession
+        # phi += np.dot(field_vec, d_vec[count])
+        a, b, c = field_vec
+        x, y, z = d_vec
+        norm_product = ((a**2 + b**2 + c**2) * (x**2 + y**2 + z**2))**0.5
+        ang = np.arccos((a*x + b*y + c*z) / norm_product)
+        cross = norm_product * np.sin(ang)
+        phi += cross
 
     temp = (GAMMA * m) / h * phi
     wavelength = wavelength * 10**-10 # m

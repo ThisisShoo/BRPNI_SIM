@@ -1,12 +1,12 @@
 """Main file for the project."""
 import multiprocessing as mp
 from datetime import datetime
+import os
 import numpy as np
 from matplotlib import pyplot as plt
 import config
 import config_fns
 import ray_tracing_fns
-import os
 
 # # Put the input file path and file names here
 DATA_PATH = "E:/Documents and stuff/School_Stuff/_CSNS/PNI/COMSOL6.0(64bit)/Simulations/"
@@ -21,7 +21,7 @@ DATA_FILE = "bar_magnet.txt"
 SOURCE_PROFILE = "gaussian"
 
 # # Specify in which axis is the neutron beam projected
-AXIS = "x" # Axis to be raytraced along, must be "x", "y", or "z"
+AXIS = "y" # Axis to be raytraced along, must be "x", "y", or "z"
 
 # # Physisc settings
 INITIAL_POLARIZATION = 0.99 # Initial polarization rate of the neutron in decimals
@@ -33,7 +33,7 @@ PLOT_FIELD_FIRST = False # If true, generates a plot of the field before raytrac
 SHOW_PROGRESS = True # If true, prints the progress
 
 
-# Execution code
+# # Execution code
 if __name__ == "__main__":
     # Identify input data type
     if DATA_FILE.rsplit('.', maxsplit=1)[-1] == 'txt':
@@ -86,7 +86,6 @@ if __name__ == "__main__":
 
     ROW_TIME = 0
     tot_row = np.shape(output)[0]
-    print(np.shape(output))
     with mp.Pool(processes = os.cpu_count()) as pool:
         for i, row in enumerate(output):
             row_start = datetime.now()

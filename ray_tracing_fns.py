@@ -6,7 +6,7 @@ import config
 import config_fns
 import main
 
-def make_ray(b_field, start_pos, dir_vec): # BUG: somethow the rays are not being made
+def make_ray(b_field, start_pos, dir_vec):
     """Simulates a ray of neutron passing through the field space.
     Returns the magnetic field values of each voxel the ray passes through.
     Precondition: 
@@ -140,6 +140,7 @@ def ray_tracing_sim(field, pixel_pos, source):
         # Get each ray's polarization
         p_ray = config_fns.find_polarization(path_field, field_path, main.WAVELENGTH)
         # NOTE: for now, the polarizatin is a scalar. In the future, it could be a vector.
+        # p_ray = np.float64(p_ray%(np.pi * 2))
 
         i_ray = source_val * 0.5 * (1 - p_ray)
 
