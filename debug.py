@@ -1,8 +1,9 @@
 """Testing ground for new features, or to run a specific function and see what's wrong with it"""
 import numpy as np
 
-GAMMA = 1.83247179 * 10**8
-h = 6.626e-34
-m = 1.675e-27
+def power_series(x, a, b, c, d, e, f):
+    """A 5-terms power series function"""
+    output = a + b * x + c * x**2 + d * x**3 + e * x**4 + f * x**5
+    return output
 
-print(GAMMA * m / h)
+print(power_series(1, 1, 1, 1, 1, 1, 1))
