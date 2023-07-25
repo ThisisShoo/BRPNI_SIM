@@ -19,7 +19,10 @@ def make_ray(b_field, start_pos, dir_vec):
         dir_vec (tuple): The direction of the ray in terms of theta and phi.
 
     Returns:
-        np.array: The magnetic field values of each voxel the ray passes through.
+        path_field: The magnetic field values of each voxel the ray passes through,
+            in the chronological order of the ray's path.
+        field_path: The (y, z) position of the ray in each x increment, also in the
+            chronological order of the ray's path.
     """
     theta, phi = dir_vec # Radians
 
@@ -72,12 +75,6 @@ def make_ray(b_field, start_pos, dir_vec):
             path_field.append(field_at_loc)
             field_path.append(ray_loc)
 
-        if y_ray_pos < 0 or y_ray_pos >= len(b_field[0]) or z_ray_pos < 0 or z_ray_pos >= len(b_field[0][0]):
-            raise IndexError("Ray has left the space without reaching the end,"
-                             "please check the starting position and direction. "
-                             f"Ray last seen at (x, y, z) = {(x_pos, y_pos, z_pos)}. "
-                             f"The final x position should be {len(b_field)}.") 
-
     try:
         return np.flip(path_field, axis=0), np.flip(field_path, axis=0)
     except TypeError:
@@ -110,7 +107,7 @@ def ray_tracing_sim(field, pixel_pos, source):
     deviant_radius = np.tan(np.radians(config.MAX_ANGLE)) * space_dim[0]
 
     # Isolate a circular area within deviant_radius from pixel_pos
-    spotlight = np.where(np.sqrt((source_indx[0] - pixel_pos[0])**2 + (source_indx[1] - pixel_pos[1])**2) <= deviant_radius)
+    spotlight = np.where(((source_indx[0] - pixel_pos[0])**2 + (source_indx[1] - pixel_pos[1])**2)**0.5 <= deviant_radius)
 
     # Iterate through each pixel in the spotlight
     i_pix = np.float64(0)
@@ -138,7 +135,7 @@ def ray_tracing_sim(field, pixel_pos, source):
             path_field, field_path = ray
 
         # Get each ray's polarization
-        p_ray = config_fns.find_polarization(path_field, field_path, main.WAVELENGTH)
+        p_ray = config_fns.find_polarization(path_field)
         # NOTE: for now, the polarizatin is a scalar. In the future, it could be a vector.
         # p_ray = np.float64(p_ray%(np.pi * 2))
 

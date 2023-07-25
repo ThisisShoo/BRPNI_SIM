@@ -21,16 +21,17 @@ DATA_FILE = "bar_magnet.txt"
 SOURCE_PROFILE = "gaussian"
 
 # # Specify in which axis is the neutron beam projected
-AXIS = "y" # Axis to be raytraced along, must be "x", "y", or "z"
+AXIS = "x" # Axis to be raytraced along, must be "x", "y", or "z"
 
 # # Physisc settings
 INITIAL_POLARIZATION = 0.99 # Initial polarization rate of the neutron in decimals
-WAVELENGTH = 2
+WAVELENGTH = 7.0 # Wavelength of the neutron in Angstroms
 
 # # Misc settings
-PLOT_NAME = 'Sim'
+PLOT_NAME = 'Simulation'
 PLOT_FIELD_FIRST = False # If true, generates a plot of the field before raytracing
 SHOW_PROGRESS = True # If true, prints the progress
+MAKE_PLOT = True
 
 
 # # Execution code
@@ -99,16 +100,27 @@ if __name__ == "__main__":
 
             ROW_TIME = datetime.now() - row_start
             if SHOW_PROGRESS:
+                total_time = datetime.now() - start_time
                 print(f"Processed row {i}/{tot_row}, progress {progress}"
                       f"%. Last row used {ROW_TIME}. "
-                      f"Total time elapsed: {datetime.now() - start_time}. "
-                      f"Estimated time remaining: {tot_row * ROW_TIME}. ")
-
-    # Normalize the output
+                      f"Total time elapsed: {total_time}. "
+                      f"Estimated time remaining: {total_time/(i + 1) * (tot_row - i)}. ")
 
     completion = datetime.now()
     print(f"{completion} - Processing complete."
           f"Total time taken: {completion - start_time}")
+
+    # Compute the sum of the output, and store the result in a file with settings.
+    output_sum = np.sum(output)
+    with open(f"Data_Folder/{PLOT_NAME}.txt", 'a', encoding='utf8') as f:
+        printout = f"\u03BB:{WAVELENGTH}\u212B, P0:{INITIAL_POLARIZATION*100}%, "
+        printout += f"intensity:{output_sum}\n"
+        f.write(printout)
+
+        print("Result saved.")
+    
+    if MAKE_PLOT is False:
+        exit()
 
     PLOT_AXIS = "zyx".replace(AXIS, '')
 
@@ -122,15 +134,17 @@ if __name__ == "__main__":
     cbar = fig.colorbar(contorf, ticks=cbar_ticks)
     cbar.ax.set_ylabel('Neutron Brightness')
     cbar.add_lines(contor)
+    plt.clim(0, 2e30)
 
     plt.ylabel(f"{PLOT_AXIS[1]} [pix]")
     plt.xlabel(f"{PLOT_AXIS[0]} [pix]")
-    plt.title(f"Raytracing output, subject:{PLOT_NAME}, \u03BB:{WAVELENGTH}\u212B, P0:{INITIAL_POLARIZATION*100}%, axis:{AXIS}")
+    plt.title(f"Raytracing output, subject:{PLOT_NAME}, \u03BB:{WAVELENGTH}\u212B, "
+              f"P0:{INITIAL_POLARIZATION*100}%, axis:{AXIS}")
 
     if PLOT_NAME == '' or PLOT_NAME is None:
-        PLOT_NAME = 'Result'
+        IMG_NAME = 'Result'
     else:
-        PLOT_NAME = f'{PLOT_NAME} {WAVELENGTH}A {int(INITIAL_POLARIZATION*100)}P'
+        IMG_NAME = f'{PLOT_NAME} {WAVELENGTH}A {int(INITIAL_POLARIZATION*100)}P'
 
-    plt.savefig(f"plots/{PLOT_NAME} {AXIS}.png")
-    print(f"{datetime.now()} - Plot saved as {PLOT_NAME} {AXIS}.png")
+    plt.savefig(f"plots/{IMG_NAME} {AXIS}.png")
+    print(f"{datetime.now()} - Plot saved as {IMG_NAME} {AXIS}.png")
