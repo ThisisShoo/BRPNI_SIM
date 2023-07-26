@@ -15,6 +15,8 @@ This package also contains two post-simulation analysis scripts, which are also 
 * matplotlib
 * scipy
 
+Please find the presentation slides for this project [here](https://github.com/ThisisShoo/PNI_Sim/blob/main/Misc/Algorithm Presentation.pptx)
+
 ## Installation
 
 To install the simulator, simply clone the repository. 
