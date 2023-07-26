@@ -28,15 +28,16 @@ for line in data:
     intensity = np.append(intensity, float(intensity_temp.split(":")[1]))
 
 # Make a fit to verify linearity
-def power_series(x, a, b, c, d, e, f_):
+def power_series(x, a, b, c, d, e, f_, g):
     """A 5-terms power series function"""
-    output = a + b * x + c * x**2 + d * x**3 + e * x**4 + f_ * x**5
+    output = a + b * x + c * x**2 + d * x**3 + e * x**4 + f_ * x**5 + g * x**6
     return output
 
-popt, pcov = curve_fit(power_series, wavelength, intensity, p0=[1e30, 1e30, 1e30, 1e30, 1e30, 1e30])
+popt, pcov = curve_fit(power_series, wavelength, intensity, p0=[1e30, 1e30, 1e30, 1e30, 1e30, 1e30, 1e30])
 
-fit_result = power_series(wavelength, popt[0], popt[1], popt[2], popt[3], popt[4], popt[5])
+fit_result = power_series(wavelength, popt[0], popt[1], popt[2], popt[3], popt[4], popt[5], popt[6])
 residual = fit_result - intensity
+chisq = sum((intensity - fit_result)**2 - fit_result)
 
 # Plot the data
 fig, ax = plt.subplots(2, 1, figsize=(9, 7))
@@ -65,6 +66,7 @@ fig.tight_layout()
 # plt.show()
 
 print(f"The fit result is: y = {popt[0]} + {popt[1]}x + {popt[2]}x^2 + "
-      f"{popt[3]}x^3 + {popt[4]}x^4 + {popt[5]}x^5")
+      f"{popt[3]}x^3 + {popt[4]}x^4 + {popt[5]}x^5 + {popt[6]}x^6")
+print(f"The chi squared is: {chisq}")
 
 fig.savefig(f"plots/Intensity_vs_wavelength for {instance_name}.png")

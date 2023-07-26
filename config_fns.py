@@ -1,8 +1,14 @@
 """Utility functions that are not directly related to the simulation.
     Editing this file is not advised.
 """
-import numpy as np
 import main
+import multiprocessing as mp
+from datetime import datetime
+import os
+import numpy as np
+from matplotlib import pyplot as plt
+import config
+import ray_tracing_fns
 
 def gaussian_2d(space_dim, sigma, mu_):
     """Returns a 2D Gaussian distribution in a 2D array.
@@ -103,7 +109,7 @@ def read_data(data_path, filename):
 
     return field, field_loc
 
-def find_polarization(path_field):
+def find_polarization(path_field, wavelength, initial_polarization):
     """Calculates a neutron's polarization rate after passing through a magnetic field along 
         its path.
 
@@ -118,11 +124,142 @@ def find_polarization(path_field):
     m = 1.674 * 10**-27 # kg
     field_integral = np.sum(path_field, axis=0) # In the same unit as COMSOL's export
 
-    dP_temp = (GAMMA * m / h * np.linalg.norm(field_integral) * main.WAVELENGTH)**2
+    dP_temp = (GAMMA * m / h * np.linalg.norm(field_integral) * wavelength)**2
 
     dP = max(dP_temp, 0)
 
-    P = (1 - dP) * main.INITIAL_POLARIZATION
+    P = (1 - dP) * initial_polarization
 
     return P
+
+def master_execution(data_path, data_file, source_profile, axis, initial_polarization,
+                      wavelength, plot_name, plot_field_first, show_progress, make_plot):
+    """Master execution function.
+    
+    Args:
+        data_path (str): Path to the data file.
+        data_file (str): Name of the data file.
+        source_profile (str): Type of source profile to be used.
+        axis (str): Axis to be raytraced along.
+        initial_polarization (float): Initial polarization rate of the neutron in decimals.
+        wavelength (float): Wavelength of the neutron in Angstroms.
+        plot_name (str): Name of the plot.
+        plot_field_first (bool): If true, generates a 3D plot of the field before raytracing.
+        show_progress (bool): If true, prints the progress.
+        make_plot (bool): If true, generates a plot of the raytracing result.
+
+    Returns:
+        None
+    """
+    # Identify input data type
+    if data_file.rsplit('.', maxsplit=1)[-1] == 'txt':
+        field, _ = read_data(data_path, data_file)
+        field_loc = np.indices(np.shape(field)[:-1])
+    elif data_file.rsplit('.', maxsplit=1)[-1] == 'npz':
+        data = np.load(data_path + "/" + data_file)
+        field = data["field"]
+        field_loc = data["field_loc"]
+
+    field = np.transpose(field, (3, 0, 1, 2))
+
+    # Rotate the field (40, 32, 24, 3) (z, y, x, 3)
+    axis_rot = {"x": (3, 2, 1, 0), "y": (2, 3, 1, 0), "z": (1, 3, 2, 0)}
+
+    field_loc = np.transpose(field_loc, axis_rot[axis])
+    field = np.transpose(field, axis_rot[axis])
+
+    space_dim = np.array(np.shape(field)[0:3])
+    space_dim = np.array(space_dim)
+
+    field_loc_t = np.transpose(field_loc, (3, 0, 1, 2))
+    field_t = np.transpose(field, (3, 0, 1, 2))
+
+    # Plot the input data
+    if plot_field_first:
+        ax = plt.figure().add_subplot(projection='3d')
+        x, y, z = field_loc_t
+        ax.quiver(x, y, z,
+                  field_t[2], field_t[1], field_t[0],
+                  length = 1, normalize = True)
+        plt.show()
+
+    if source_profile is None:
+        source = np.ones((space_dim[1], space_dim[2]))
+        print("No source profile specified, using a uniform source profile.")
+    elif source_profile == "gaussian":
+        source = gaussian_2d(space_dim,
+                                        config.SOURCE_STD,
+                                        config.SOURCE_NORM)
+    else:
+        pass
+
+    # Do raytracing
+    start_time = datetime.now()
+    print(f"Starting raytracing at {str(start_time)}, along axis {axis}.")
+
+    output = np.zeros(space_dim[1:3])
+
+    tot_row = np.shape(output)[0]
+    with mp.Pool(processes = os.cpu_count()) as pool:
+        for i, row in enumerate(output):
+            row_start = datetime.now()
+            progress = round(i/tot_row * 100, 2)
+            for j, col in enumerate(row):
+                i_pix = pool.apply_async(ray_tracing_fns.ray_tracing_sim,
+                                         args=(field, (i, j), source,
+                                               wavelength, initial_polarization))
+                i_pix = i_pix.get()
+
+                output[i][j] = i_pix
+
+            row_time = datetime.now() - row_start
+            if show_progress:
+                total_time = datetime.now() - start_time
+                print(f"Processed row {i}/{tot_row}, progress {progress}"
+                      f"%. Last row used {row_time}. "
+                      f"Total time elapsed: {total_time}. "
+                      f"Estimated time remaining: {total_time/(i + 1) * (tot_row - i)}. ")
+
+    completion = datetime.now()
+    print(f"{completion} - Processing complete."
+          f"Total time taken: {completion - start_time}")
+
+    # Compute the sum of the output, and store the result in a file with settings.
+    output_sum = np.sum(output)
+    with open(f"Data_Folder/{plot_name}.txt", 'a', encoding='utf8') as f:
+        printout = f"\u03BB:{wavelength}\u212B, P0:{initial_polarization*100}%, "
+        printout += f"intensity:{output_sum}\n"
+        f.write(printout)
+
+        print("Result saved.")
+
+    if make_plot is False:
+        return None
+
+    plot_axis = "zyx".replace(axis, '')
+
+    # Make the plot
+    size = (space_dim[2] + 1.5, space_dim[1])/max(space_dim[1:3]) * 7
+    fig, ax = plt.subplots(layout = 'constrained', figsize = size)
+    contorf = plt.contourf(output)
+    contor = ax.contour(contorf, levels = contorf.levels[::2], colors='r')
+
+    cbar_ticks = np.linspace(np.min(output), np.max(output), 20)
+    cbar = fig.colorbar(contorf, ticks=cbar_ticks)
+    cbar.ax.set_ylabel('Neutron Brightness')
+    cbar.add_lines(contor)
+    plt.clim(0, 5e31)
+
+    plt.ylabel(f"{plot_axis[1]} [pix]")
+    plt.xlabel(f"{plot_axis[0]} [pix]")
+    plt.title(f"Raytracing output, subject:{plot_name}, \u03BB:{wavelength}\u212B, "
+              f"P0:{initial_polarization*100}%, axis:{axis}")
+
+    if plot_name == '' or plot_name is None:
+        IMG_NAME = 'Result'
+    else:
+        IMG_NAME = f'{plot_name} {wavelength}A {int(initial_polarization*100)}P'
+
+    plt.savefig(f"plots/{IMG_NAME} {axis}.png")
+    print(f"{datetime.now()} - Plot saved as {IMG_NAME} {axis}.png")
         
