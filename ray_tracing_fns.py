@@ -82,7 +82,7 @@ def make_ray(b_field, start_pos, dir_vec):
         field_path = cp.array(field_path)
         return cp.flip(path_field, axis=0), cp.flip(field_path, axis=0)
 
-def ray_tracing_sim(field, pixel_pos, source):
+def ray_tracing_sim(field, pixel_pos, source, wavelength, initial_polarization):
     """Casts a spotlight from a camera pixel to the source to find the pixels within the spotlight.
     For each source pixel in the spotlight, find the direction of the ray and run make_ray() to get
         the field values along the ray as well as the ray's path. Calcualte the polarization rate of
@@ -135,7 +135,7 @@ def ray_tracing_sim(field, pixel_pos, source):
             path_field, field_path = ray
 
         # Get each ray's polarization
-        p_ray = config_fns.find_polarization(path_field)
+        p_ray = config_fns.find_polarization(path_field, wavelength, initial_polarization)
         # NOTE: for now, the polarizatin is a scalar. In the future, it could be a vector.
         # p_ray = np.float64(p_ray%(np.pi * 2))
 
