@@ -1,6 +1,6 @@
 ![alt text](https://github.com/ThisisShoo/PNI_Sim/blob/main/Misc/animation.gif "Logo Title Text 1")
 
-# PNI_Sim
+# BRPNI_SIM
 
 This neutron Larmor precession simulator is compatible with a diffusive neutron source with a given intensity profile. It was designed to verify theories regarding Polarized Neutron Imaging (PNI). The simulator is written in Python 3.11 and uses the following packages:
 
